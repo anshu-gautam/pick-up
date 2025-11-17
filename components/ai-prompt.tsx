@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Wand2 } from "lucide-react";
 import { GradientConfig } from "@/types/gradient";
 import { toast } from "sonner";
 
@@ -18,6 +17,7 @@ const examplePrompts = [
   "vibrant e-commerce gradient for fashion brand",
   "minimal elegant gradient for landing page",
   "energetic gradient for fitness app",
+  "soft pastel gradient for wellness app",
 ];
 
 export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
@@ -62,56 +62,72 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
+    <div className="w-full max-w-4xl mx-auto space-y-6">
+      {/* Hero Section */}
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 mb-4">
+          <Wand2 className="h-8 w-8 text-white" />
+        </div>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
           AI Gradient Generator
-        </CardTitle>
-        <CardDescription>
-          Describe your ideal gradient and let AI create it
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="e.g., warm sunset gradient for tech startup hero"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyPress={handleKeyPress}
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+          Describe your vision and watch AI create stunning gradients for your hero sections
+        </p>
+      </div>
+
+      {/* Prompt Input */}
+      <div className="relative">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Describe your gradient (e.g., warm sunset gradient for tech startup)"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={loading}
+              className="h-14 text-base px-6 pr-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-2"
+            />
+            <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          </div>
+          <Button
+            onClick={handleGenerate}
             disabled={loading}
-          />
-          <Button onClick={handleGenerate} disabled={loading}>
+            size="lg"
+            className="h-14 px-8 rounded-xl text-base font-semibold"
+          >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                 Generating...
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4 mr-2" />
                 Generate
               </>
             )}
           </Button>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">Try these examples:</p>
-          <div className="flex flex-wrap gap-2">
-            {examplePrompts.slice(0, 3).map((example, index) => (
-              <button
-                key={index}
-                onClick={() => setPrompt(example)}
-                className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors"
-                disabled={loading}
-              >
-                {example}
-              </button>
-            ))}
-          </div>
+      {/* Example Prompts */}
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-muted-foreground text-center">
+          Try these examples or create your own
+        </p>
+        <div className="flex flex-wrap gap-2 justify-center">
+          {examplePrompts.map((example, index) => (
+            <button
+              key={index}
+              onClick={() => setPrompt(example)}
+              className="text-sm px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 transition-all hover:scale-105 border border-border"
+              disabled={loading}
+            >
+              {example}
+            </button>
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
