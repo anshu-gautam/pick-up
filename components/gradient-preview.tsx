@@ -1,0 +1,76 @@
+"use client";
+
+import { useRef } from "react";
+import { GradientConfig, DeviceSize } from "@/types/gradient";
+import { generateGradientCSS } from "@/lib/gradient-utils";
+import { cn } from "@/lib/utils";
+
+interface GradientPreviewProps {
+  gradient: GradientConfig;
+  deviceSize?: DeviceSize;
+  showTextOverlay?: boolean;
+  textColor?: string;
+  className?: string;
+}
+
+const deviceSizeClasses: Record<DeviceSize, string> = {
+  mobile: "max-w-[375px]",
+  tablet: "max-w-[768px]",
+  desktop: "w-full",
+};
+
+export function GradientPreview({
+  gradient,
+  deviceSize = "desktop",
+  showTextOverlay = true,
+  textColor = "#ffffff",
+  className,
+}: GradientPreviewProps) {
+  const previewRef = useRef<HTMLDivElement>(null);
+  const gradientCSS = generateGradientCSS(gradient);
+
+  return (
+    <div className={cn("mx-auto transition-all duration-300", deviceSizeClasses[deviceSize], className)}>
+      <div
+        ref={previewRef}
+        className="relative w-full aspect-[16/9] rounded-lg overflow-hidden shadow-2xl"
+        style={{
+          background: gradientCSS,
+        }}
+      >
+        {showTextOverlay && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+            <h1
+              className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 transition-colors"
+              style={{ color: textColor }}
+            >
+              Hero Section
+            </h1>
+            <p
+              className="text-lg md:text-xl lg:text-2xl mb-8 max-w-2xl transition-colors"
+              style={{ color: textColor, opacity: 0.9 }}
+            >
+              Test your gradient with real text to ensure perfect readability
+            </p>
+            <button
+              className="px-6 py-3 rounded-lg font-semibold text-base transition-all hover:scale-105"
+              style={{
+                backgroundColor: textColor,
+                color: gradient.colorStops[0]?.color || "#000000",
+              }}
+            >
+              Call to Action
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Device size indicator */}
+      <div className="mt-2 text-center text-sm text-muted-foreground">
+        {deviceSize === "mobile" && "📱 Mobile (375px)"}
+        {deviceSize === "tablet" && "📱 Tablet (768px)"}
+        {deviceSize === "desktop" && "🖥️ Desktop (Full Width)"}
+      </div>
+    </div>
+  );
+}
