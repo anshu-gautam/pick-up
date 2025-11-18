@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useGradientStore } from "@/lib/store";
-import { GradientPreview } from "@/components/gradient-preview";
+import { DraggableCanvas } from "@/components/draggable-canvas";
 import { GradientEditor } from "@/components/gradient-editor";
 import { AccessibilityChecker } from "@/components/accessibility-checker";
 import { ExportPanel } from "@/components/export-panel";
@@ -15,7 +15,7 @@ import { SaveGradientDialog } from "@/components/save-gradient-dialog";
 import { SavedGradients } from "@/components/saved-gradients";
 import { Button } from "@/components/ui/button";
 import { GradientConfig } from "@/types/gradient";
-import { Sparkles, Save, FolderOpen, Wand2, Github } from "lucide-react";
+import { Sparkles, Save, FolderOpen, Wand2, Github, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { generateRandomGradient } from "@/lib/gradient-utils";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ export default function Home() {
   const previewRef = useRef<HTMLDivElement>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showSavedGradients, setShowSavedGradients] = useState(false);
+  const [showAISidebar, setShowAISidebar] = useState(true);
 
   const {
     currentGradient,
@@ -45,6 +46,14 @@ export default function Home() {
     setTextAlignment,
     showButton,
     setShowButton,
+    headingPosition,
+    setHeadingPosition,
+    subheadingPosition,
+    setSubheadingPosition,
+    buttonPosition,
+    setButtonPosition,
+    selectedElement,
+    setSelectedElement,
   } = useGradientStore();
 
   const handleGradientsGenerated = (gradients: GradientConfig[]) => {
@@ -69,7 +78,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="h-screen flex flex-col bg-background relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="fixed inset-0 gradient-bg-animated opacity-50 pointer-events-none" />
 
@@ -78,8 +87,8 @@ export default function Home() {
       <div className="fixed bottom-1/4 -right-32 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: "-3s" }} />
 
       {/* Header */}
-      <header className="relative border-b bg-background/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="relative border-b bg-background/80 backdrop-blur-xl z-50 flex-shrink-0">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
@@ -122,117 +131,124 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative container mx-auto px-4 py-8">
-        {/* Improved Layout - Clear workflow: Generate → Preview → Customize → Export */}
-        <div className="space-y-6">
-
-          {/* Section 1: AI Generation - Full width for prominence */}
-          <div className="animate-slide-up">
+      {/* Main Content - App-like Layout */}
+      <main className="relative flex-1 flex overflow-hidden">
+        {/* Left Sidebar - AI Generation */}
+        <aside className={`
+          ${showAISidebar ? 'w-80' : 'w-0'}
+          transition-all duration-300 ease-in-out
+          border-r bg-background/80 backdrop-blur-xl
+          flex-shrink-0 overflow-hidden
+        `}>
+          <div className="w-80 h-full overflow-y-auto p-4">
             <AIPrompt onGradientsGenerated={handleGradientsGenerated} />
           </div>
+        </aside>
 
-          {/* Section 2: Main workspace - Preview + Customization */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+        {/* Toggle Sidebar Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAISidebar(!showAISidebar)}
+          className="absolute left-0 top-4 z-10 ml-2"
+          style={{ left: showAISidebar ? '320px' : '0' }}
+        >
+          {showAISidebar ? (
+            <PanelLeftClose className="h-4 w-4" />
+          ) : (
+            <PanelLeftOpen className="h-4 w-4" />
+          )}
+        </Button>
 
-            {/* Left Column: Preview (Main Focus) */}
-            <div className="lg:col-span-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              <div ref={previewRef} className="h-full">
-                <GradientPreview
-                  gradient={currentGradient}
-                  deviceSize={deviceSize}
-                  showTextOverlay={showTextOverlay}
-                  textColor={textColor}
-                  headingText={headingText}
-                  subheadingText={subheadingText}
-                  buttonText={buttonText}
-                  fontSize={fontSize}
-                  textAlignment={textAlignment}
-                  showButton={showButton}
-                />
-              </div>
-            </div>
-
-            {/* Right Column: Text & Preview Controls */}
-            <div className="lg:col-span-4 space-y-4">
-              {/* Text Customization - Primary control */}
-              <div className="animate-slide-up" style={{ animationDelay: "0.2s" }}>
-                <TextCustomizationPanel
-                  headingText={headingText}
-                  onHeadingTextChange={setHeadingText}
-                  subheadingText={subheadingText}
-                  onSubheadingTextChange={setSubheadingText}
-                  buttonText={buttonText}
-                  onButtonTextChange={setButtonText}
-                  fontSize={fontSize}
-                  onFontSizeChange={setFontSize}
-                  textAlignment={textAlignment}
-                  onTextAlignmentChange={setTextAlignment}
-                  textColor={textColor}
-                  onTextColorChange={setTextColor}
-                  showTextOverlay={showTextOverlay}
-                  onShowTextOverlayChange={setShowTextOverlay}
-                  showButton={showButton}
-                  onShowButtonChange={setShowButton}
-                />
-              </div>
-
-              {/* Device Preview Controls */}
-              <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
-                <ControlsPanel
-                  deviceSize={deviceSize}
-                  onDeviceSizeChange={setDeviceSize}
-                  showTextOverlay={showTextOverlay}
-                  onShowTextOverlayChange={setShowTextOverlay}
-                  textColor={textColor}
-                  onTextColorChange={setTextColor}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Presets & Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-            <div className="lg:col-span-8 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-              {showSavedGradients ? (
-                <SavedGradients onSelect={handleSelectSavedGradient} />
-              ) : (
-                <PresetGallery onSelectPreset={setCurrentGradient} />
-              )}
-            </div>
-
-            {/* Accessibility Checker */}
-            <div className="lg:col-span-4 animate-slide-up" style={{ animationDelay: "0.5s" }}>
-              <AccessibilityChecker gradient={currentGradient} />
-            </div>
-          </div>
-
-          {/* Section 4: Fine-tune & Export */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-            {/* Gradient Editor - Detailed controls */}
-            <div className="animate-slide-up" style={{ animationDelay: "0.6s" }}>
-              <GradientEditor
+        {/* Center - Main Canvas */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Canvas Area */}
+          <div className="flex-1 p-4 lg:p-6 overflow-y-auto">
+            <div ref={previewRef} className="h-full min-h-[500px]">
+              <DraggableCanvas
                 gradient={currentGradient}
-                onChange={setCurrentGradient}
+                deviceSize={deviceSize}
+                showTextOverlay={showTextOverlay}
+                textColor={textColor}
+                headingText={headingText}
+                subheadingText={subheadingText}
+                buttonText={buttonText}
+                fontSize={fontSize}
+                textAlignment={textAlignment}
+                showButton={showButton}
+                headingPosition={headingPosition}
+                subheadingPosition={subheadingPosition}
+                buttonPosition={buttonPosition}
+                selectedElement={selectedElement}
+                onHeadingPositionChange={setHeadingPosition}
+                onSubheadingPositionChange={setSubheadingPosition}
+                onButtonPositionChange={setButtonPosition}
+                onSelectedElementChange={setSelectedElement}
               />
             </div>
+          </div>
 
-            {/* Export Panel */}
-            <div className="animate-slide-up" style={{ animationDelay: "0.7s" }}>
-              <ExportPanel gradient={currentGradient} previewRef={previewRef} />
+          {/* Bottom Section - Presets, Editor, Export */}
+          <div className="border-t bg-background/80 backdrop-blur-xl p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Presets / Saved */}
+              <div className="lg:col-span-1">
+                {showSavedGradients ? (
+                  <SavedGradients onSelect={handleSelectSavedGradient} />
+                ) : (
+                  <PresetGallery onSelectPreset={setCurrentGradient} />
+                )}
+              </div>
+
+              {/* Gradient Editor */}
+              <div className="lg:col-span-1">
+                <GradientEditor
+                  gradient={currentGradient}
+                  onChange={setCurrentGradient}
+                />
+              </div>
+
+              {/* Export Panel */}
+              <div className="lg:col-span-1">
+                <ExportPanel gradient={currentGradient} previewRef={previewRef} />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-16 py-8 border-t text-center">
-          <p className="text-sm text-muted-foreground">
-            <span className="gradient-text font-semibold">Gradient Studio</span> - Create beautiful, accessible gradients for hero sections and landing pages
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Built with Next.js, TypeScript, TailwindCSS, and AI
-          </p>
-        </footer>
+        {/* Right Sidebar - Controls */}
+        <aside className="w-80 border-l bg-background/80 backdrop-blur-xl flex-shrink-0 overflow-y-auto hidden xl:block">
+          <div className="p-4 space-y-4">
+            {/* Text Customization */}
+            <TextCustomizationPanel
+              headingText={headingText}
+              onHeadingTextChange={setHeadingText}
+              subheadingText={subheadingText}
+              onSubheadingTextChange={setSubheadingText}
+              buttonText={buttonText}
+              onButtonTextChange={setButtonText}
+              fontSize={fontSize}
+              onFontSizeChange={setFontSize}
+              textAlignment={textAlignment}
+              onTextAlignmentChange={setTextAlignment}
+              textColor={textColor}
+              onTextColorChange={setTextColor}
+              showTextOverlay={showTextOverlay}
+              onShowTextOverlayChange={setShowTextOverlay}
+              showButton={showButton}
+              onShowButtonChange={setShowButton}
+            />
+
+            {/* Device Preview Controls */}
+            <ControlsPanel
+              deviceSize={deviceSize}
+              onDeviceSizeChange={setDeviceSize}
+            />
+
+            {/* Accessibility Checker */}
+            <AccessibilityChecker gradient={currentGradient} />
+          </div>
+        </aside>
       </main>
 
       {/* Save Gradient Dialog */}
