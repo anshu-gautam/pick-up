@@ -14,11 +14,14 @@ import { SaveGradientDialog } from "@/components/save-gradient-dialog";
 import { SavedGradients } from "@/components/saved-gradients";
 import { Button } from "@/components/ui/button";
 import { GradientConfig } from "@/types/gradient";
-import { Sparkles, Save, FolderOpen, Wand2, Github } from "lucide-react";
+import { Sparkles, Save, FolderOpen, Wand2, Github, LogIn } from "lucide-react";
 import { generateRandomGradient } from "@/lib/gradient-utils";
 import { toast } from "sonner";
+import { UserButton, SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 
 export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth();
   const previewRef = useRef<HTMLDivElement>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showSavedGradients, setShowSavedGradients] = useState(false);
@@ -65,7 +68,7 @@ export default function Home() {
       <div className="fixed bottom-1/4 -right-32 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float pointer-events-none" style={{ animationDelay: "-3s" }} />
 
       {/* Header */}
-      <header className="relative border-b bg-background/80 backdrop-blur-xl sticky top-0 z-50">
+      <header className="border-b bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -96,6 +99,35 @@ export default function Home() {
                 <span className="hidden sm:inline">Random</span>
               </Button>
               <ThemeToggle />
+              
+              {/* Auth Buttons - Always visible */}
+              {!isLoaded ? (
+                <div className="h-9 w-20 bg-secondary animate-pulse rounded" />
+              ) : isSignedIn ? (
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "h-9 w-9"
+                    }
+                  }}
+                />
+              ) : (
+                <>
+                  <Link href="/sign-in">
+                    <Button variant="ghost" size="sm" className="font-semibold">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 font-semibold">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
+              
               <a
                 href="https://github.com"
                 target="_blank"

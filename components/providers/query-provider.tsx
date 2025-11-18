@@ -2,9 +2,13 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { apiClient } from "@/lib/api";
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const { getToken, isSignedIn } = useAuth();
+  
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -21,6 +25,14 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         },
       })
   );
+
+  // Initialize API client with Clerk token getter
+  useEffect(() => {
+    apiClient.setTokenGetter(async () => {
+      if (!isSignedIn) return null;
+      return await getToken();
+    });
+  }, [getToken, isSignedIn]);
 
   return (
     <QueryClientProvider client={queryClient}>

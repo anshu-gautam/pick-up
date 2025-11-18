@@ -54,7 +54,7 @@ A modern web application that uses AI to generate beautiful, accessible gradient
 - **AI Integration**: OpenAI GPT-4o-mini
 - **Color Manipulation**: Colord
 - **Image Export**: html-to-image
-- **Authentication**: Clerk (optional)
+- **Authentication**: Clerk
 - **Database**: Supabase (optional)
 
 ## Getting Started
@@ -63,7 +63,7 @@ A modern web application that uses AI to generate beautiful, accessible gradient
 
 - Node.js 18+ and npm
 - OpenAI API key (required for AI features)
-- Clerk account (optional, for authentication)
+- Clerk account (required, for authentication)
 - Supabase project (optional, for data persistence)
 
 ### Installation
@@ -95,14 +95,16 @@ Edit \`.env.local\` and add your API keys:
 # Required for AI gradient generation
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Optional - for user authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
+# Required - for user authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Optional - for saving gradients
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 \`\`\`
+
+**📖 For detailed Clerk setup instructions, see [docs/CLERK_SETUP.md](docs/CLERK_SETUP.md)**
 
 4. **Run the development server**
 
@@ -249,7 +251,7 @@ Make sure to add these in your deployment platform:
 
 ## Roadmap
 
-- [ ] User authentication with Clerk
+- [x] User authentication with Clerk
 - [ ] Save gradients to personal library
 - [ ] Community gradient gallery
 - [ ] Mesh gradient support
