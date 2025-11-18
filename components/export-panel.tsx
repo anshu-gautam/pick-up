@@ -1,18 +1,26 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GradientConfig, ExportFormat } from "@/types/gradient";
 import { getExportContent, downloadFile, exportAsPNG } from "@/lib/export-utils";
-import { Download, Copy, Check } from "lucide-react";
+import { Download, Copy, Check, FileCode, Image } from "lucide-react";
 import { toast } from "sonner";
 
 interface ExportPanelProps {
   gradient: GradientConfig;
   previewRef?: React.RefObject<HTMLDivElement | null>;
 }
+
+const formats: { value: ExportFormat; label: string }[] = [
+  { value: "css", label: "CSS" },
+  { value: "tailwind", label: "TW" },
+  { value: "react", label: "React" },
+  { value: "vue", label: "Vue" },
+  { value: "svg", label: "SVG" },
+  { value: "png", label: "PNG" },
+];
 
 export function ExportPanel({ gradient, previewRef }: ExportPanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("css");
@@ -27,7 +35,7 @@ export function ExportPanel({ gradient, previewRef }: ExportPanelProps) {
       setCopied(true);
       toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error("Failed to copy");
     }
   };
@@ -59,7 +67,7 @@ export function ExportPanel({ gradient, previewRef }: ExportPanelProps) {
         );
         toast.success("File downloaded!");
       }
-    } catch (error) {
+    } catch {
       toast.error("Export failed");
     } finally {
       setExporting(false);
@@ -67,60 +75,77 @@ export function ExportPanel({ gradient, previewRef }: ExportPanelProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Export</CardTitle>
-        <CardDescription>Export your gradient in various formats</CardDescription>
+    <Card variant="glass">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <FileCode className="h-4 w-4 text-primary" />
+          Export
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as ExportFormat)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="css">CSS</TabsTrigger>
-            <TabsTrigger value="tailwind">Tailwind</TabsTrigger>
-            <TabsTrigger value="react">React</TabsTrigger>
-          </TabsList>
-          <TabsList className="grid w-full grid-cols-3 mt-2">
-            <TabsTrigger value="vue">Vue</TabsTrigger>
-            <TabsTrigger value="svg">SVG</TabsTrigger>
-            <TabsTrigger value="png">PNG</TabsTrigger>
-          </TabsList>
+      <CardContent className="space-y-4">
+        {/* Format selector */}
+        <div className="grid grid-cols-6 gap-1">
+          {formats.map((format) => (
+            <button
+              key={format.value}
+              onClick={() => setSelectedFormat(format.value)}
+              className={`px-2 py-1.5 text-[10px] font-medium rounded-lg transition-all ${
+                selectedFormat === format.value
+                  ? "bg-primary text-white"
+                  : "bg-secondary/50 hover:bg-secondary text-muted-foreground"
+              }`}
+            >
+              {format.label}
+            </button>
+          ))}
+        </div>
 
-          <div className="mt-4">
-            <TabsContent value={selectedFormat} className="mt-0">
-              {selectedFormat !== "png" ? (
-                <div className="relative">
-                  <pre className="bg-secondary p-4 rounded-lg overflow-x-auto text-xs max-h-64">
-                    <code>{codeContent}</code>
-                  </pre>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="absolute top-2 right-2"
-                    onClick={handleCopy}
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-              ) : (
-                <div className="bg-secondary p-4 rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Click download to export as PNG image (1200x675px)
-                  </p>
-                </div>
-              )}
-            </TabsContent>
+        {/* Code preview */}
+        {selectedFormat !== "png" ? (
+          <div className="relative">
+            <pre className="bg-secondary/30 border border-white/5 p-3 rounded-xl overflow-x-auto text-[10px] max-h-40 scrollbar-thin font-mono">
+              <code className="text-foreground/80">{codeContent}</code>
+            </pre>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="absolute top-1.5 right-1.5 h-6 w-6 p-0"
+              onClick={handleCopy}
+            >
+              {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+            </Button>
           </div>
-        </Tabs>
+        ) : (
+          <div className="bg-secondary/30 border border-white/5 p-4 rounded-xl text-center">
+            <Image className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              Export as PNG (1200x675)
+            </p>
+          </div>
+        )}
 
-        <div className="flex gap-2 mt-4">
+        {/* Action buttons */}
+        <div className="flex gap-2">
           {selectedFormat !== "png" && (
-            <Button onClick={handleCopy} variant="outline" className="flex-1">
-              <Copy className="h-4 w-4 mr-2" />
-              {copied ? "Copied!" : "Copy"}
+            <Button
+              onClick={handleCopy}
+              variant="outline"
+              size="sm"
+              className="flex-1 bg-transparent border-white/10"
+            >
+              <Copy className="h-3.5 w-3.5 mr-1.5" />
+              {copied ? "Copied" : "Copy"}
             </Button>
           )}
-          <Button onClick={handleDownload} className="flex-1" disabled={exporting}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button
+            onClick={handleDownload}
+            size="sm"
+            className={`flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 ${
+              selectedFormat === "png" ? "w-full" : ""
+            }`}
+            disabled={exporting}
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
             {exporting ? "Exporting..." : "Download"}
           </Button>
         </div>

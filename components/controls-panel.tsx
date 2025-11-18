@@ -1,11 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { DeviceSize } from "@/types/gradient";
-import { Monitor, Tablet, Smartphone } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Eye, EyeOff, Settings2 } from "lucide-react";
 
 interface ControlsPanelProps {
   deviceSize: DeviceSize;
@@ -25,64 +24,65 @@ export function ControlsPanel({
   onTextColorChange,
 }: ControlsPanelProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Preview Controls</CardTitle>
-        <CardDescription>Customize preview settings</CardDescription>
+    <Card variant="glass">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Settings2 className="h-4 w-4 text-primary" />
+          Preview Controls
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Device Size */}
         <div className="space-y-2">
-          <Label>Device Size</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <Label className="text-xs text-muted-foreground">Device Size</Label>
+          <div className="grid grid-cols-3 gap-1.5">
             <Button
-              variant={deviceSize === "mobile" ? "default" : "outline"}
+              variant={deviceSize === "mobile" ? "default" : "ghost"}
               size="sm"
               onClick={() => onDeviceSizeChange("mobile")}
-              className="flex items-center gap-2"
+              className={deviceSize === "mobile" ? "bg-primary/90" : "hover:bg-secondary/50"}
             >
-              <Smartphone className="h-4 w-4" />
-              Mobile
+              <Smartphone className="h-3.5 w-3.5" />
             </Button>
             <Button
-              variant={deviceSize === "tablet" ? "default" : "outline"}
+              variant={deviceSize === "tablet" ? "default" : "ghost"}
               size="sm"
               onClick={() => onDeviceSizeChange("tablet")}
-              className="flex items-center gap-2"
+              className={deviceSize === "tablet" ? "bg-primary/90" : "hover:bg-secondary/50"}
             >
-              <Tablet className="h-4 w-4" />
-              Tablet
+              <Tablet className="h-3.5 w-3.5" />
             </Button>
             <Button
-              variant={deviceSize === "desktop" ? "default" : "outline"}
+              variant={deviceSize === "desktop" ? "default" : "ghost"}
               size="sm"
               onClick={() => onDeviceSizeChange("desktop")}
-              className="flex items-center gap-2"
+              className={deviceSize === "desktop" ? "bg-primary/90" : "hover:bg-secondary/50"}
             >
-              <Monitor className="h-4 w-4" />
-              Desktop
+              <Monitor className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
 
         {/* Text Overlay */}
         <div className="space-y-2">
-          <Label>Text Overlay</Label>
-          <div className="flex gap-2">
+          <Label className="text-xs text-muted-foreground">Text Overlay</Label>
+          <div className="flex gap-1.5">
             <Button
-              variant={showTextOverlay ? "default" : "outline"}
+              variant={showTextOverlay ? "default" : "ghost"}
               size="sm"
               onClick={() => onShowTextOverlayChange(true)}
-              className="flex-1"
+              className={cn("flex-1", showTextOverlay ? "bg-primary/90" : "hover:bg-secondary/50")}
             >
+              <Eye className="h-3.5 w-3.5 mr-1.5" />
               Show
             </Button>
             <Button
-              variant={!showTextOverlay ? "default" : "outline"}
+              variant={!showTextOverlay ? "default" : "ghost"}
               size="sm"
               onClick={() => onShowTextOverlayChange(false)}
-              className="flex-1"
+              className={cn("flex-1", !showTextOverlay ? "bg-primary/90" : "hover:bg-secondary/50")}
             >
+              <EyeOff className="h-3.5 w-3.5 mr-1.5" />
               Hide
             </Button>
           </div>
@@ -91,22 +91,24 @@ export function ControlsPanel({
         {/* Text Color */}
         {showTextOverlay && (
           <div className="space-y-2">
-            <Label>Text Color</Label>
-            <div className="flex gap-2">
+            <Label className="text-xs text-muted-foreground">Text Color</Label>
+            <div className="flex gap-1.5">
               <Button
-                variant={textColor === "#ffffff" ? "default" : "outline"}
+                variant={textColor === "#ffffff" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onTextColorChange("#ffffff")}
-                className="flex-1"
+                className={cn("flex-1", textColor === "#ffffff" ? "bg-primary/90" : "hover:bg-secondary/50")}
               >
+                <div className="w-3 h-3 rounded-full bg-white border border-gray-200 mr-1.5" />
                 White
               </Button>
               <Button
-                variant={textColor === "#000000" ? "default" : "outline"}
+                variant={textColor === "#000000" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onTextColorChange("#000000")}
-                className="flex-1"
+                className={cn("flex-1", textColor === "#000000" ? "bg-primary/90" : "hover:bg-secondary/50")}
               >
+                <div className="w-3 h-3 rounded-full bg-black mr-1.5" />
                 Black
               </Button>
             </div>
@@ -115,4 +117,8 @@ export function ControlsPanel({
       </CardContent>
     </Card>
   );
+}
+
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
 }

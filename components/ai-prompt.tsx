@@ -1,83 +1,79 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Wand2, Palette, Zap, Image } from "lucide-react";
+import { Sparkles, Loader2, Wand2 } from "lucide-react";
 import { GradientConfig } from "@/types/gradient";
-import { toast } from "sonner";
+import { useGenerateGradients } from "@/hooks/use-gradients";
+
+const generateSchema = z.object({
+  prompt: z.string().min(1, "Please enter a prompt").max(500, "Prompt is too long"),
+  count: z.number().min(1).max(5),
+});
+
+type GenerateFormData = z.infer<typeof generateSchema>;
 
 interface AIPromptProps {
   onGradientsGenerated: (gradients: GradientConfig[]) => void;
 }
 
 const examplePrompts = [
-  {
-    icon: Palette,
-    text: "warm sunset gradient for tech startup hero",
-    label: "Sunset Vibes",
-  },
-  {
-    icon: Zap,
-    text: "professional blue gradient with high contrast",
-    label: "Professional",
-  },
-  {
-    icon: Sparkles,
-    text: "vibrant e-commerce gradient for fashion brand",
-    label: "Fashion",
-  },
-  {
-    icon: Image,
-    text: "minimal elegant gradient for landing page",
-    label: "Minimal",
-  },
-  {
-    icon: Wand2,
-    text: "energetic gradient for fitness app",
-    label: "Energetic",
-  },
+  "warm sunset for tech startup",
+  "ocean blue with high contrast",
+  "vibrant purple for creative agency",
+  "minimal elegant for portfolio",
+  "energetic orange for fitness app",
 ];
 
 export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
+  const generateMutation = useGenerateGradients();
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error("Please enter a prompt");
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<GenerateFormData>({
+    resolver: zodResolver(generateSchema),
+    defaultValues: {
+      prompt: "",
+      count: 3,
+    },
+  });
 
-    setLoading(true);
+  const prompt = watch("prompt");
+
+  const onSubmit = async (data: GenerateFormData) => {
     try {
-      const response = await fetch("/api/generate-gradient", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
+      const result = await generateMutation.mutateAsync({
+        prompt: data.prompt,
+        count: data.count,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate gradient");
-      }
+      // Transform API response to match GradientConfig
+      const gradients: GradientConfig[] = result.gradients.map((g) => ({
+        id: g.id,
+        name: g.name,
+        type: g.type,
+        angle: g.angle,
+        colorStops: g.colorStops,
+        tags: g.tags,
+      }));
 
-      const data = await response.json();
-      onGradientsGenerated(data.gradients);
-      toast.success(`Generated ${data.gradients.length} gradients!`);
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to generate gradient. Make sure OPENAI_API_KEY is set.");
-    } finally {
-      setLoading(false);
+      onGradientsGenerated(gradients);
+    } catch {
+      // Error is already handled by the mutation
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.ctrlKey && !loading) {
-      handleGenerate();
+    if (e.key === "Enter" && !generateMutation.isPending) {
+      handleSubmit(onSubmit)();
     }
   };
 
@@ -85,95 +81,58 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
   const maxChars = 500;
 
   return (
-    <div className="space-y-6">
-      {/* Main Prompt Card */}
-      <Card className="border-2 hover:border-primary/50 transition-all duration-300 overflow-hidden">
-        <div className="relative">
-          {/* Gradient Background Accent */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-
-          <CardContent className="pt-8 pb-6 px-6">
-            {/* Header */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">Generate Your Gradient</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Describe your vision in natural language
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Prompt Input */}
-            <div className="space-y-3">
-              <Textarea
-                placeholder="e.g., Create a warm sunset gradient with orange and purple hues, perfect for a tech startup hero section with modern feel..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={handleKeyPress}
-                disabled={loading}
-                className="min-h-[120px] text-base resize-none focus-visible:ring-2 focus-visible:ring-primary transition-all"
-                maxLength={maxChars}
+    <Card variant="glass" className="overflow-hidden">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-accent">
+            <Wand2 className="h-4 w-4 text-white" />
+          </div>
+          <span className="gradient-text">AI Generator</span>
+        </CardTitle>
+        <CardDescription>
+          Describe your ideal gradient and let AI create it
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder="e.g., warm sunset for tech startup hero..."
+                {...register("prompt")}
+                onKeyPress={handleKeyPress}
+                disabled={generateMutation.isPending}
+                aria-invalid={errors.prompt ? "true" : "false"}
+                className="bg-background/50 border-white/10 focus:border-primary/50 transition-colors"
               />
-
-              {/* Character Counter & Hint */}
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <kbd className="px-2 py-1 rounded bg-muted font-mono text-xs">Ctrl</kbd>
-                  <span>+</span>
-                  <kbd className="px-2 py-1 rounded bg-muted font-mono text-xs">Enter</kbd>
-                  <span>to generate</span>
-                </div>
-                <span className={charCount > maxChars * 0.9 ? "text-orange-500 font-medium" : ""}>
-                  {charCount} / {maxChars}
-                </span>
-              </div>
+              {errors.prompt && (
+                <p className="text-xs text-destructive mt-1">{errors.prompt.message}</p>
+              )}
             </div>
-
-            {/* Generate Button */}
             <Button
-              onClick={handleGenerate}
-              disabled={loading || !prompt.trim()}
-              className="w-full mt-6 h-12 text-base font-semibold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all duration-300"
-              size="lg"
+              type="submit"
+              disabled={generateMutation.isPending}
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Generating your gradient...
-                </>
+              {generateMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Wand2 className="h-5 w-5 mr-2" />
-                  Generate Gradient
-                </>
+                <Sparkles className="h-4 w-4" />
               )}
             </Button>
-          </CardContent>
-        </div>
-      </Card>
+          </div>
+        </form>
 
-      {/* Example Prompts */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-muted-foreground">
-            ✨ Try these examples
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {examplePrompts.slice(0, 4).map((example, index) => {
-            const Icon = example.icon;
-            return (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground font-medium">Quick prompts:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {examplePrompts.map((example, index) => (
               <button
                 key={index}
-                onClick={() => setPrompt(example.text)}
-                disabled={loading}
-                className="group relative p-3 rounded-lg border-2 border-border hover:border-primary/50 bg-card hover:bg-accent/50 transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                type="button"
+                onClick={() => setValue("prompt", example)}
+                className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary border border-white/5 hover:border-primary/30 transition-all duration-200"
+                disabled={generateMutation.isPending}
               >
                 {/* Hover Gradient Effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -195,26 +154,25 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
             );
           })}
         </div>
-      </div>
 
-      {/* Pro Tips */}
-      <Card className="bg-muted/50 border-dashed">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-start gap-3">
-            <div className="p-1.5 rounded-md bg-primary/10">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <p className="text-xs font-semibold">Pro Tips for Better Results</p>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• Describe the mood, colors, and intended use</li>
-                <li>• Mention your brand style (modern, minimal, vibrant, etc.)</li>
-                <li>• Specify contrast needs for text readability</li>
-              </ul>
-            </div>
+        {prompt && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-white/5">
+            <span>Generate</span>
+            <select
+              {...register("count", { valueAsNumber: true })}
+              className="bg-secondary/50 rounded-md px-2 py-1 text-xs border border-white/10 focus:border-primary/50 outline-none"
+              disabled={generateMutation.isPending}
+            >
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+              <option value={5}>5</option>
+            </select>
+            <span>gradient{watch("count") !== 1 ? "s" : ""}</span>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

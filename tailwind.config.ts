@@ -55,6 +55,28 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+      },
+      animation: {
+        "float": "float 6s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "slide-up": "slide-up 0.5s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "gradient-shift": "gradient-shift 15s ease infinite",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "mesh-gradient": "linear-gradient(135deg, hsl(262 83% 58% / 0.1) 0%, hsl(280 65% 60% / 0.1) 50%, hsl(199 89% 48% / 0.1) 100%)",
+      },
+      boxShadow: {
+        "glow": "0 0 30px -5px hsl(var(--primary) / 0.3)",
+        "glow-lg": "0 0 60px -10px hsl(var(--primary) / 0.4)",
+        "inner-glow": "inset 0 0 30px -10px hsl(var(--primary) / 0.2)",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
     },
   },
