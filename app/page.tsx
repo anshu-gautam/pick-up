@@ -9,6 +9,7 @@ import { ExportPanel } from "@/components/export-panel";
 import { AIPrompt } from "@/components/ai-prompt";
 import { PresetGallery } from "@/components/preset-gallery";
 import { ControlsPanel } from "@/components/controls-panel";
+import { TextCustomizationPanel } from "@/components/text-customization-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SaveGradientDialog } from "@/components/save-gradient-dialog";
 import { SavedGradients } from "@/components/saved-gradients";
@@ -32,6 +33,18 @@ export default function Home() {
     setShowTextOverlay,
     textColor,
     setTextColor,
+    headingText,
+    setHeadingText,
+    subheadingText,
+    setSubheadingText,
+    buttonText,
+    setButtonText,
+    fontSize,
+    setFontSize,
+    textAlignment,
+    setTextAlignment,
+    showButton,
+    setShowButton,
   } = useGradientStore();
 
   const handleGradientsGenerated = (gradients: GradientConfig[]) => {
@@ -111,63 +124,103 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="relative container mx-auto px-4 py-8">
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+        {/* Improved Layout - Clear workflow: Generate → Preview → Customize → Export */}
+        <div className="space-y-6">
 
-          {/* AI Prompt - Full width on top for prominence */}
-          <div className="lg:col-span-8 animate-slide-up">
+          {/* Section 1: AI Generation - Full width for prominence */}
+          <div className="animate-slide-up">
             <AIPrompt onGradientsGenerated={handleGradientsGenerated} />
           </div>
 
-          {/* Quick Actions / Saved Gradients Toggle */}
-          <div className="lg:col-span-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            {showSavedGradients ? (
-              <SavedGradients onSelect={handleSelectSavedGradient} />
-            ) : (
-              <PresetGallery onSelectPreset={setCurrentGradient} />
-            )}
-          </div>
+          {/* Section 2: Main workspace - Preview + Customization */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
 
-          {/* Main Preview - Large hero section */}
-          <div className="lg:col-span-8 lg:row-span-2 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-            <div ref={previewRef} className="h-full">
-              <GradientPreview
-                gradient={currentGradient}
-                deviceSize={deviceSize}
-                showTextOverlay={showTextOverlay}
-                textColor={textColor}
-              />
+            {/* Left Column: Preview (Main Focus) */}
+            <div className="lg:col-span-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              <div ref={previewRef} className="h-full">
+                <GradientPreview
+                  gradient={currentGradient}
+                  deviceSize={deviceSize}
+                  showTextOverlay={showTextOverlay}
+                  textColor={textColor}
+                  headingText={headingText}
+                  subheadingText={subheadingText}
+                  buttonText={buttonText}
+                  fontSize={fontSize}
+                  textAlignment={textAlignment}
+                  showButton={showButton}
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Text & Preview Controls */}
+            <div className="lg:col-span-4 space-y-4">
+              {/* Text Customization - Primary control */}
+              <div className="animate-slide-up" style={{ animationDelay: "0.2s" }}>
+                <TextCustomizationPanel
+                  headingText={headingText}
+                  onHeadingTextChange={setHeadingText}
+                  subheadingText={subheadingText}
+                  onSubheadingTextChange={setSubheadingText}
+                  buttonText={buttonText}
+                  onButtonTextChange={setButtonText}
+                  fontSize={fontSize}
+                  onFontSizeChange={setFontSize}
+                  textAlignment={textAlignment}
+                  onTextAlignmentChange={setTextAlignment}
+                  textColor={textColor}
+                  onTextColorChange={setTextColor}
+                  showTextOverlay={showTextOverlay}
+                  onShowTextOverlayChange={setShowTextOverlay}
+                  showButton={showButton}
+                  onShowButtonChange={setShowButton}
+                />
+              </div>
+
+              {/* Device Preview Controls */}
+              <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
+                <ControlsPanel
+                  deviceSize={deviceSize}
+                  onDeviceSizeChange={setDeviceSize}
+                  showTextOverlay={showTextOverlay}
+                  onShowTextOverlayChange={setShowTextOverlay}
+                  textColor={textColor}
+                  onTextColorChange={setTextColor}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Controls Panel */}
-          <div className="lg:col-span-4 animate-slide-up" style={{ animationDelay: "0.3s" }}>
-            <ControlsPanel
-              deviceSize={deviceSize}
-              onDeviceSizeChange={setDeviceSize}
-              showTextOverlay={showTextOverlay}
-              onShowTextOverlayChange={setShowTextOverlay}
-              textColor={textColor}
-              onTextColorChange={setTextColor}
-            />
+          {/* Section 3: Presets & Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+            <div className="lg:col-span-8 animate-slide-up" style={{ animationDelay: "0.4s" }}>
+              {showSavedGradients ? (
+                <SavedGradients onSelect={handleSelectSavedGradient} />
+              ) : (
+                <PresetGallery onSelectPreset={setCurrentGradient} />
+              )}
+            </div>
+
+            {/* Accessibility Checker */}
+            <div className="lg:col-span-4 animate-slide-up" style={{ animationDelay: "0.5s" }}>
+              <AccessibilityChecker gradient={currentGradient} />
+            </div>
           </div>
 
-          {/* Accessibility Checker */}
-          <div className="lg:col-span-4 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-            <AccessibilityChecker gradient={currentGradient} />
-          </div>
+          {/* Section 4: Fine-tune & Export */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+            {/* Gradient Editor - Detailed controls */}
+            <div className="animate-slide-up" style={{ animationDelay: "0.6s" }}>
+              <GradientEditor
+                gradient={currentGradient}
+                onChange={setCurrentGradient}
+              />
+            </div>
 
-          {/* Gradient Editor - Detailed controls */}
-          <div className="lg:col-span-6 animate-slide-up" style={{ animationDelay: "0.5s" }}>
-            <GradientEditor
-              gradient={currentGradient}
-              onChange={setCurrentGradient}
-            />
-          </div>
-
-          {/* Export Panel */}
-          <div className="lg:col-span-6 animate-slide-up" style={{ animationDelay: "0.6s" }}>
-            <ExportPanel gradient={currentGradient} previewRef={previewRef} />
+            {/* Export Panel */}
+            <div className="animate-slide-up" style={{ animationDelay: "0.7s" }}>
+              <ExportPanel gradient={currentGradient} previewRef={previewRef} />
+            </div>
           </div>
         </div>
 
