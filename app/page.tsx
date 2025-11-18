@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useGradientStore } from "@/lib/store";
 import { GradientPreview } from "@/components/gradient-preview";
 import { GradientEditor } from "@/components/gradient-editor";
@@ -10,14 +10,18 @@ import { AIPrompt } from "@/components/ai-prompt";
 import { PresetGallery } from "@/components/preset-gallery";
 import { ControlsPanel } from "@/components/controls-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SaveGradientDialog } from "@/components/save-gradient-dialog";
+import { SavedGradients } from "@/components/saved-gradients";
 import { Button } from "@/components/ui/button";
 import { GradientConfig } from "@/types/gradient";
-import { Palette, Sparkles } from "lucide-react";
+import { Palette, Sparkles, Save, FolderOpen } from "lucide-react";
 import { generateRandomGradient } from "@/lib/gradient-utils";
 import { toast } from "sonner";
 
 export default function Home() {
   const previewRef = useRef<HTMLDivElement>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showSavedGradients, setShowSavedGradients] = useState(false);
 
   const {
     currentGradient,
@@ -42,6 +46,16 @@ export default function Home() {
     toast.success("Random gradient generated!");
   };
 
+  const handleSaveGradient = () => {
+    setShowSaveDialog(true);
+  };
+
+  const handleSelectSavedGradient = (gradient: GradientConfig) => {
+    setCurrentGradient(gradient);
+    setShowSavedGradients(false);
+    toast.success(`Loaded "${gradient.name}"`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -52,6 +66,14 @@ export default function Home() {
             <h1 className="text-2xl font-bold">AI Gradient Generator</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowSavedGradients(!showSavedGradients)}>
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Saved
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleSaveGradient}>
+              <Save className="h-4 w-4 mr-2" />
+              Save
+            </Button>
             <Button variant="outline" onClick={handleRandomGradient}>
               <Sparkles className="h-4 w-4 mr-2" />
               Random
@@ -67,6 +89,9 @@ export default function Home() {
           {/* Left Sidebar */}
           <div className="space-y-6 lg:col-span-1">
             <AIPrompt onGradientsGenerated={handleGradientsGenerated} />
+            {showSavedGradients && (
+              <SavedGradients onSelect={handleSelectSavedGradient} />
+            )}
             <PresetGallery onSelectPreset={setCurrentGradient} />
           </div>
 
@@ -113,6 +138,13 @@ export default function Home() {
           </p>
         </footer>
       </main>
+
+      {/* Save Gradient Dialog */}
+      <SaveGradientDialog
+        gradient={currentGradient}
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+      />
     </div>
   );
 }

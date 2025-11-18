@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { GradientConfig } from "@/types/gradient";
-import { toast } from "sonner";
+import { useGenerateGradients } from "@/hooks/use-gradients";
+
+const generateSchema = z.object({
+  prompt: z.string().min(1, "Please enter a prompt").max(500, "Prompt is too long"),
+  count: z.number().min(1).max(5),
+});
+
+type GenerateFormData = z.infer<typeof generateSchema>;
 
 interface AIPromptProps {
   onGradientsGenerated: (gradients: GradientConfig[]) => void;
@@ -21,43 +30,50 @@ const examplePrompts = [
 ];
 
 export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
+  const generateMutation = useGenerateGradients();
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error("Please enter a prompt");
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<GenerateFormData>({
+    resolver: zodResolver(generateSchema),
+    defaultValues: {
+      prompt: "",
+      count: 3,
+    },
+  });
 
-    setLoading(true);
+  const prompt = watch("prompt");
+
+  const onSubmit = async (data: GenerateFormData) => {
     try {
-      const response = await fetch("/api/generate-gradient", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
+      const result = await generateMutation.mutateAsync({
+        prompt: data.prompt,
+        count: data.count,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate gradient");
-      }
+      // Transform API response to match GradientConfig
+      const gradients: GradientConfig[] = result.gradients.map((g) => ({
+        id: g.id,
+        name: g.name,
+        type: g.type,
+        angle: g.angle,
+        colorStops: g.colorStops,
+        tags: g.tags,
+      }));
 
-      const data = await response.json();
-      onGradientsGenerated(data.gradients);
-      toast.success(`Generated ${data.gradients.length} gradients!`);
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to generate gradient. Make sure OPENAI_API_KEY is set.");
-    } finally {
-      setLoading(false);
+      onGradientsGenerated(gradients);
+    } catch {
+      // Error is already handled by the mutation
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !loading) {
-      handleGenerate();
+    if (e.key === "Enter" && !generateMutation.isPending) {
+      handleSubmit(onSubmit)();
     }
   };
 
@@ -73,28 +89,35 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="e.g., warm sunset gradient for tech startup hero"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={loading}
-          />
-          <Button onClick={handleGenerate} disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate
-              </>
-            )}
-          </Button>
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder="e.g., warm sunset gradient for tech startup hero"
+                {...register("prompt")}
+                onKeyPress={handleKeyPress}
+                disabled={generateMutation.isPending}
+                aria-invalid={errors.prompt ? "true" : "false"}
+              />
+              {errors.prompt && (
+                <p className="text-xs text-destructive mt-1">{errors.prompt.message}</p>
+              )}
+            </div>
+            <Button type="submit" disabled={generateMutation.isPending}>
+              {generateMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
 
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">Try these examples:</p>
@@ -102,15 +125,34 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
             {examplePrompts.slice(0, 3).map((example, index) => (
               <button
                 key={index}
-                onClick={() => setPrompt(example)}
+                type="button"
+                onClick={() => setValue("prompt", example)}
                 className="text-xs px-2 py-1 rounded bg-secondary hover:bg-secondary/80 transition-colors"
-                disabled={loading}
+                disabled={generateMutation.isPending}
               >
                 {example}
               </button>
             ))}
           </div>
         </div>
+
+        {prompt && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Generating</span>
+            <select
+              {...register("count", { valueAsNumber: true })}
+              className="bg-secondary rounded px-2 py-1 text-xs"
+              disabled={generateMutation.isPending}
+            >
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+              <option value={5}>5</option>
+            </select>
+            <span>gradient{watch("count") !== 1 ? "s" : ""}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
