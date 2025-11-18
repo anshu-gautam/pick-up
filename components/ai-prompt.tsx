@@ -77,6 +77,9 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
     }
   };
 
+  const charCount = prompt.length;
+  const maxChars = 500;
+
   return (
     <Card variant="glass" className="overflow-hidden">
       <CardHeader className="pb-4">
@@ -131,10 +134,25 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
                 className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary border border-white/5 hover:border-primary/30 transition-all duration-200"
                 disabled={generateMutation.isPending}
               >
-                {example}
+                {/* Hover Gradient Effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                <div className="relative flex items-start gap-3">
+                  <div className="p-1.5 rounded-md bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold mb-1 text-foreground">
+                      {example.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground line-clamp-2">
+                      {example.text}
+                    </div>
+                  </div>
+                </div>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {prompt && (
