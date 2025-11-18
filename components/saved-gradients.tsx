@@ -25,7 +25,7 @@ export function SavedGradients({ onSelect }: SavedGradientsProps) {
   };
 
   return (
-    <Card>
+    <Card variant="glass">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

@@ -75,7 +75,7 @@ export function GradientEditor({ gradient, onChange }: GradientEditorProps) {
   const selectedStop = gradient.colorStops.find((s) => s.id === selectedStopId);
 
   return (
-    <Card>
+    <Card variant="glass">
       <CardHeader>
         <CardTitle className="text-lg">Gradient Editor</CardTitle>
         <CardDescription>Customize your gradient</CardDescription>
