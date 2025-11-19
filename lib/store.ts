@@ -5,6 +5,11 @@ import { generateRandomGradient } from "./gradient-utils";
 export type FontSize = "sm" | "md" | "lg" | "xl";
 export type TextAlignment = "left" | "center" | "right";
 
+export interface ElementPosition {
+  x: number; // percentage 0-100
+  y: number; // percentage 0-100
+}
+
 interface GradientStore {
   currentGradient: GradientConfig;
   setCurrentGradient: (gradient: GradientConfig) => void;
@@ -30,6 +35,15 @@ interface GradientStore {
   setTextAlignment: (alignment: TextAlignment) => void;
   showButton: boolean;
   setShowButton: (show: boolean) => void;
+  // Element positions for canvas
+  headingPosition: ElementPosition;
+  setHeadingPosition: (position: ElementPosition) => void;
+  subheadingPosition: ElementPosition;
+  setSubheadingPosition: (position: ElementPosition) => void;
+  buttonPosition: ElementPosition;
+  setButtonPosition: (position: ElementPosition) => void;
+  selectedElement: "heading" | "subheading" | "button" | null;
+  setSelectedElement: (element: "heading" | "subheading" | "button" | null) => void;
   savedGradients: GradientConfig[];
   saveGradient: (gradient: GradientConfig) => void;
   removeSavedGradient: (id: string) => void;
@@ -63,6 +77,15 @@ export const useGradientStore = create<GradientStore>((set) => ({
   setTextAlignment: (alignment) => set({ textAlignment: alignment }),
   showButton: true,
   setShowButton: (show) => set({ showButton: show }),
+  // Element positions for canvas (centered by default)
+  headingPosition: { x: 50, y: 35 },
+  setHeadingPosition: (position) => set({ headingPosition: position }),
+  subheadingPosition: { x: 50, y: 50 },
+  setSubheadingPosition: (position) => set({ subheadingPosition: position }),
+  buttonPosition: { x: 50, y: 70 },
+  setButtonPosition: (position) => set({ buttonPosition: position }),
+  selectedElement: null,
+  setSelectedElement: (element) => set({ selectedElement: element }),
   savedGradients: [],
   saveGradient: (gradient) =>
     set((state) => ({
