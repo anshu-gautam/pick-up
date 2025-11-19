@@ -3,10 +3,24 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Wand2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Sparkles, Loader2, Wand2, Info } from "lucide-react";
 import { GradientConfig } from "@/types/gradient";
 import { useGenerateGradients } from "@/hooks/use-gradients";
 
@@ -47,6 +61,7 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
   });
 
   const prompt = watch("prompt");
+  const count = watch("count");
 
   const onSubmit = async (data: GenerateFormData) => {
     try {
@@ -55,7 +70,6 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
         count: data.count,
       });
 
-      // Transform API response to match GradientConfig
       const gradients: GradientConfig[] = result.gradients.map((g) => ({
         id: g.id,
         name: g.name,
@@ -79,85 +93,114 @@ export function AIPrompt({ onGradientsGenerated }: AIPromptProps) {
 
   const charCount = prompt.length;
   const maxChars = 500;
+  const charPercentage = (charCount / maxChars) * 100;
 
   return (
-    <Card variant="glass" className="overflow-hidden">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-accent">
-            <Wand2 className="h-4 w-4 text-white" />
+    <div className="space-y-4">
+      {/* Main form - clean inline design */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            {generateMutation.isPending ? (
+              <Skeleton className="h-10 w-full" />
+            ) : (
+              <div className="relative">
+                <Input
+                  placeholder="Describe your ideal gradient... e.g., warm sunset for tech startup hero"
+                  {...register("prompt")}
+                  onKeyPress={handleKeyPress}
+                  disabled={generateMutation.isPending}
+                  aria-invalid={errors.prompt ? "true" : "false"}
+                  className="h-10 pr-10 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Info className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs">
+                      Describe the mood, colors, or purpose of your gradient. AI will generate matching options.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+            {errors.prompt && (
+              <p className="text-xs text-destructive mt-1">{errors.prompt.message}</p>
+            )}
           </div>
-          <span className="gradient-text">AI Generator</span>
-        </CardTitle>
-        <CardDescription>
-          Describe your ideal gradient and let AI create it
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Input
-                placeholder="e.g., warm sunset for tech startup hero..."
-                {...register("prompt")}
-                onKeyPress={handleKeyPress}
-                disabled={generateMutation.isPending}
-                aria-invalid={errors.prompt ? "true" : "false"}
-                className="bg-background/50 border-white/10 focus:border-primary/50 transition-colors"
-              />
-              {errors.prompt && (
-                <p className="text-xs text-destructive mt-1">{errors.prompt.message}</p>
-              )}
-            </div>
-            <Button
-              type="submit"
-              disabled={generateMutation.isPending}
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-            >
-              {generateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </form>
 
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-medium">Quick prompts:</p>
-          <div className="flex flex-wrap gap-1.5">
-            {examplePrompts.map((example, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => setValue("prompt", example)}
-                className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary border border-white/5 hover:border-primary/30 transition-all duration-200"
-                disabled={generateMutation.isPending}
-              >
-                {example}
-              </button>
-            ))}
-          </div>
+          {/* Count selector */}
+          <Select
+            value={count.toString()}
+            onValueChange={(value) => setValue("count", parseInt(value))}
+            disabled={generateMutation.isPending}
+          >
+            <SelectTrigger className="w-16 h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1</SelectItem>
+              <SelectItem value="2">2</SelectItem>
+              <SelectItem value="3">3</SelectItem>
+              <SelectItem value="4">4</SelectItem>
+              <SelectItem value="5">5</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            type="submit"
+            disabled={generateMutation.isPending || !prompt.trim()}
+            className="h-10 px-4 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+          >
+            {generateMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Wand2 className="h-4 w-4 mr-2" />
+                Generate
+              </>
+            )}
+          </Button>
         </div>
 
+        {/* Character count progress */}
         {prompt && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-white/5">
-            <span>Generate</span>
-            <select
-              {...register("count", { valueAsNumber: true })}
-              className="bg-secondary/50 rounded-md px-2 py-1 text-xs border border-white/10 focus:border-primary/50 outline-none"
-              disabled={generateMutation.isPending}
-            >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-              <option value={5}>5</option>
-            </select>
-            <span>gradient{watch("count") !== 1 ? "s" : ""}</span>
+          <div className="space-y-1">
+            <Progress value={charPercentage} className="h-1" />
+            <p className="text-[10px] text-muted-foreground text-right">
+              {charCount}/{maxChars} characters
+            </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </form>
+
+      {/* Example prompts as badges */}
+      <div className="flex flex-wrap gap-1.5">
+        <span className="text-xs text-muted-foreground mr-1 flex items-center">
+          <Sparkles className="h-3 w-3 mr-1" />
+          Try:
+        </span>
+        {examplePrompts.map((example, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="cursor-pointer hover:bg-secondary/80 transition-colors text-xs font-normal"
+            onClick={() => {
+              if (!generateMutation.isPending) {
+                setValue("prompt", example);
+              }
+            }}
+          >
+            {example}
+          </Badge>
+        ))}
+      </div>
+    </div>
   );
 }
